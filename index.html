@@ -1,17 +1,19 @@
 
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>My Notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#5146a5">
+    <meta name="theme-color" content="#5146a5">
+
 <style>
     body {
         font-family: Arial, sans-serif;
         background: #f1f3f8;
         padding: 20px;
         margin: 0;
+        color: #222;
     }
 
     h1 {
@@ -19,14 +21,18 @@
         text-align: center;
     }
 
-    textarea {
+    input, textarea {
         width: 100%;
-        height: 120px;
-        padding: 12px;
         box-sizing: border-box;
-        border: 1px solid #cccccc;
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
         border-radius: 12px;
         font-size: 16px;
+    }
+
+    textarea {
+        height: 120px;
     }
 
     button {
@@ -47,68 +53,71 @@
         box-shadow: 0 2px 8px #00000015;
         overflow-wrap: anywhere;
     }
-</style>
 
+    .dark-mode {
+        background: #1e1e2e;
+        color: white;
+    }
+
+    .dark-mode h1 {
+        color: #c4b5fd;
+    }
+
+    .dark-mode input,
+    .dark-mode textarea {
+        background: #33334a;
+        color: white;
+        border-color: #555;
+    }
+
+    .dark-mode #notes > div {
+        background: #33334a;
+        color: white;
+    }
+</style>
 </head>
+
 <body>
 
-    <h1>My Notes</h1>
+<h1>My Notes</h1>
 
-    <textarea id="note" placeholder="Write your note here..."></textarea>
+<input type="text" id="search"
+placeholder="Search notes..." oninput="displayNotes()">
 
-    <br><br>
+<input type="text" id="title"
+placeholder="Enter note title...">
 
-    <button onclick="addNote()">Add Note</button>
+<textarea id="note"
+placeholder="Write your note here..."></textarea>
 
-    <div id="notes"></div>
+<br>
 
-    <script>
-        
+<button onclick="addNote()">Add Note</button>
+<button onclick="toggleDarkMode()" id="darkBtn">🌙 Dark Mode</button>
+
+<div id="notes"></div>
+
+<script>
+
 let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
+
+notes = notes.map(function(note) {
+    if (typeof note === "string") {
+        return {
+            title: "Untitled",
+            text: note,
+            date: ""
+        };
+    }
+    return note;
+});
 
 function saveNotes() {
     localStorage.setItem("myNotes", JSON.stringify(notes));
 }
 
-function displayNotes() {
-    let notesArea = document.getElementById("notes");
-    notesArea.innerHTML = "";
-
-    notes.forEach(function(note, index) {
-        let noteBox = document.createElement("div");
-
-        let newNote = document.createElement("p");
-        newNote.innerText = note;
-
-        let editBtn = document.createElement("button");
-        editBtn.innerText = "Edit";
-
-        editBtn.onclick = function() {
-            let updatedNote = prompt("Edit your note:", notes[index]);
-
-            if (updatedNote !== null && updatedNote.trim() !== "") {
-                notes[index] = updatedNote.trim();
-                saveNotes();
-                displayNotes();
-            }
-        };
-
-        let deleteBtn = document.createElement("button");
-        deleteBtn.innerText = "Delete";
-
-        deleteBtn.onclick = function() {
-            deleteNote(index);
-        };
-
-        noteBox.appendChild(newNote);
-        noteBox.appendChild(editBtn);
-        noteBox.appendChild(deleteBtn);
-
-        notesArea.appendChild(noteBox);
-    });
-}
-
 function addNote() {
+    let title = document.getElementById("title").value;
     let note = document.getElementById("note").value;
 
     if (note.trim() === "") {
@@ -116,40 +125,114 @@ function addNote() {
         return;
     }
 
-    notes.push(note);
+    notes.push({
+        title: title.trim() || "Untitled",
+        text: note.trim(),
+        date: new Date().toLocaleString()
+    });
+
     saveNotes();
     displayNotes();
 
+    document.getElementById("title").value = "";
     document.getElementById("note").value = "";
 }
 
-function deleteNote(index) {
-    notes.splice(index, 1);
-    saveNotes();
-    displayNotes();
+function displayNotes() {
+    let notesArea = document.getElementById("notes");
+    let searchText = document.getElementById("search").value.toLowerCase();
+
+    notesArea.innerHTML = "";
+
+    notes.forEach(function(note, index) {
+
+        if (
+            !note.title.toLowerCase().includes(searchText) &&
+            !note.text.toLowerCase().includes(searchText)
+        ) {
+            return;
+        }
+
+        let noteBox = document.createElement("div");
+
+        let noteTitle = document.createElement("h3");
+        noteTitle.innerText = note.title;
+
+        let newNote = document.createElement("p");
+        newNote.innerText = note.text;
+
+        let noteDate = document.createElement("small");
+        noteDate.innerText = note.date || "";
+
+        let editBtn = document.createElement("button");
+        editBtn.innerText = "Edit";
+
+        editBtn.onclick = function() {
+            let updatedTitle = prompt("Edit title:", note.title);
+            if (updatedTitle === null) return;
+
+            let updatedNote = prompt("Edit note:", note.text);
+            if (updatedNote === null) return;
+
+            notes[index].title = updatedTitle.trim() || "Untitled";
+            notes[index].text = updatedNote.trim();
+
+            saveNotes();
+            displayNotes();
+        };
+
+        let deleteBtn = document.createElement("button");
+        deleteBtn.innerText = "Delete";
+
+        deleteBtn.onclick = function() {
+            if (confirm("Delete this note?")) {
+                notes.splice(index, 1);
+                saveNotes();
+                displayNotes();
+            }
+        };
+
+        noteBox.appendChild(noteTitle);
+        noteBox.appendChild(newNote);
+        noteBox.appendChild(noteDate);
+        noteBox.appendChild(document.createElement("br"));
+        noteBox.appendChild(editBtn);
+        noteBox.appendChild(deleteBtn);
+
+        notesArea.appendChild(noteBox);
+    });
 }
 
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+
+    let dark = document.body.classList.contains("dark-mode");
+
+    localStorage.setItem("darkMode", dark ? "on" : "off");
+
+    document.getElementById("darkBtn").innerText =
+        dark ? "☀️ Light Mode" : "🌙 Dark Mode";
+}
+
+if (localStorage.getItem("darkMode") === "on") {
+    document.body.classList.add("dark-mode");
+    document.getElementById("darkBtn").innerText = "☀️ Light Mode";
+}
+
+saveNotes();
 displayNotes();
 
-
-
-        
-    </script>
+</script>
 
 <script>
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-        navigator.serviceWorker.register("./service-worker.js")
-            .then(function() {
-                console.log("Service Worker Registered");
-            })
-            .catch(function(error) {
-                console.log("Service Worker Error:", error);
-            });
+        navigator.serviceWorker.register("./service-worker.js");
     });
 }
 </script>
 
 </body>
 </html>
+
 
