@@ -1,0 +1,155 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Notes</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5146a5">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f1f3f8;
+        padding: 20px;
+        margin: 0;
+    }
+
+    h1 {
+        color: #5146a5;
+        text-align: center;
+    }
+
+    textarea {
+        width: 100%;
+        height: 120px;
+        padding: 12px;
+        box-sizing: border-box;
+        border: 1px solid #cccccc;
+        border-radius: 12px;
+        font-size: 16px;
+    }
+
+    button {
+        background: #5146a5;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        margin: 5px;
+        font-size: 14px;
+    }
+
+    #notes > div {
+        background: white;
+        padding: 12px;
+        margin-top: 12px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px #00000015;
+        overflow-wrap: anywhere;
+    }
+</style>
+
+</head>
+<body>
+
+    <h1>My Notes</h1>
+
+    <textarea id="note" placeholder="Write your note here..."></textarea>
+
+    <br><br>
+
+    <button onclick="addNote()">Add Note</button>
+
+    <div id="notes"></div>
+
+    <script>
+        
+let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
+
+function saveNotes() {
+    localStorage.setItem("myNotes", JSON.stringify(notes));
+}
+
+function displayNotes() {
+    let notesArea = document.getElementById("notes");
+    notesArea.innerHTML = "";
+
+    notes.forEach(function(note, index) {
+        let noteBox = document.createElement("div");
+
+        let newNote = document.createElement("p");
+        newNote.innerText = note;
+
+        let editBtn = document.createElement("button");
+        editBtn.innerText = "Edit";
+
+        editBtn.onclick = function() {
+            let updatedNote = prompt("Edit your note:", notes[index]);
+
+            if (updatedNote !== null && updatedNote.trim() !== "") {
+                notes[index] = updatedNote.trim();
+                saveNotes();
+                displayNotes();
+            }
+        };
+
+        let deleteBtn = document.createElement("button");
+        deleteBtn.innerText = "Delete";
+
+        deleteBtn.onclick = function() {
+            deleteNote(index);
+        };
+
+        noteBox.appendChild(newNote);
+        noteBox.appendChild(editBtn);
+        noteBox.appendChild(deleteBtn);
+
+        notesArea.appendChild(noteBox);
+    });
+}
+
+function addNote() {
+    let note = document.getElementById("note").value;
+
+    if (note.trim() === "") {
+        alert("Please write something!");
+        return;
+    }
+
+    notes.push(note);
+    saveNotes();
+    displayNotes();
+
+    document.getElementById("note").value = "";
+}
+
+function deleteNote(index) {
+    notes.splice(index, 1);
+    saveNotes();
+    displayNotes();
+}
+
+displayNotes();
+
+
+
+        
+    </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+        navigator.serviceWorker.register("./service-worker.js")
+            .then(function() {
+                console.log("Service Worker Registered");
+            })
+            .catch(function(error) {
+                console.log("Service Worker Error:", error);
+            });
+    });
+}
+</script>
+
+</body>
+</html>
+
