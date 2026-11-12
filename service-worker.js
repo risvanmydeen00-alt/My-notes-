@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "my-notes-v1";
+const CACHE_NAME = "my-notes-v2";
 
 const FILES_TO_CACHE = [
     "./",
