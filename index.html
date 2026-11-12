@@ -4,85 +4,161 @@
 <head>
     <title>My Notes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#5146a5">
+    <link rel="manifest" href="manifest.json">
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f1f3f8;
-        padding: 20px;
-        margin: 0;
-        color: #222;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    h1 {
-        color: #5146a5;
-        text-align: center;
-    }
+html, body {
+    overscroll-behavior-y: none;
+}
 
-    input, textarea {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 12px;
-        margin: 8px 0;
-        border: 1px solid #ccc;
-        border-radius: 12px;
-        font-size: 16px;
-    }
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f1fb;
+    color: #25233a;
+    margin: 0;
+    padding: 20px;
+    transition: 0.3s;
+}
 
-    textarea {
-        height: 120px;
-    }
+.container {
+    max-width: 600px;
+    margin: auto;
+}
 
-    button {
-        background: #5146a5;
-        color: white;
-        border: none;
-        padding: 10px 18px;
-        border-radius: 8px;
-        margin: 5px;
-        font-size: 14px;
-    }
+header {
+    text-align: center;
+    padding: 20px 0;
+}
 
-    #notes > div {
-        background: white;
-        padding: 12px;
-        margin-top: 12px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px #00000015;
-        overflow-wrap: anywhere;
-    }
+header h1 {
+    color: #5146a5;
+    font-size: 30px;
+    margin-bottom: 5px;
+}
 
-    .dark-mode {
-        background: #1e1e2e;
-        color: white;
-    }
+header p {
+    color: #777;
+    margin-top: 5px;
+}
 
-    .dark-mode h1 {
-        color: #c4b5fd;
-    }
+input, textarea {
+    width: 100%;
+    padding: 14px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    font-size: 16px;
+    background: white;
+}
 
-    .dark-mode input,
-    .dark-mode textarea {
-        background: #33334a;
-        color: white;
-        border-color: #555;
-    }
+textarea {
+    height: 130px;
+    resize: vertical;
+}
 
-    .dark-mode #notes > div {
-        background: #33334a;
-        color: white;
-    }
+button {
+    border: none;
+    padding: 12px 18px;
+    border-radius: 12px;
+    margin: 5px 3px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #5146a5;
+    color: white;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#notes {
+    margin-top: 20px;
+}
+
+#notes > div {
+    background: white;
+    padding: 16px;
+    margin: 14px 0;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px #00000010;
+    overflow-wrap: anywhere;
+}
+
+#notes h3 {
+    color: #5146a5;
+    margin-top: 0;
+}
+
+#notes p {
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+small {
+    color: #888;
+}
+
+.delete-btn {
+    background: #dc4545;
+}
+
+.edit-btn {
+    background: #7770bd;
+}
+
+.dark-mode {
+    background: #171725;
+    color: white;
+}
+
+.dark-mode header h1,
+.dark-mode #notes h3 {
+    color: #c4b5fd;
+}
+
+.dark-mode header p,
+.dark-mode small {
+    color: #aaa;
+}
+
+.dark-mode input,
+.dark-mode textarea {
+    background: #29293b;
+    color: white;
+    border-color: #444;
+}
+
+.dark-mode #notes > div {
+    background: #29293b;
+    color: white;
+}
+
+.empty {
+    text-align: center;
+    color: #888;
+    padding: 25px;
+}
 </style>
 </head>
 
 <body>
+<div class="container">
 
-<h1>My Notes</h1>
+<header>
+    <h1>My Notes ✨</h1>
+    <p>Your personal notebook</p>
+</header>
 
 <input type="text" id="search"
-placeholder="Search notes..." oninput="displayNotes()">
+placeholder="🔍 Search notes..." oninput="displayNotes()">
 
 <input type="text" id="title"
 placeholder="Enter note title...">
@@ -90,15 +166,18 @@ placeholder="Enter note title...">
 <textarea id="note"
 placeholder="Write your note here..."></textarea>
 
-<br>
-
-<button onclick="addNote()">Add Note</button>
-<button onclick="toggleDarkMode()" id="darkBtn">🌙 Dark Mode</button>
+<div class="actions">
+    <button onclick="addNote()">＋ Add Note</button>
+    <button onclick="toggleDarkMode()" id="darkBtn">
+        🌙 Dark Mode
+    </button>
+</div>
 
 <div id="notes"></div>
 
-<script>
+</div>
 
+<script>
 let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
 
 notes = notes.map(function(note) {
@@ -139,52 +218,57 @@ function addNote() {
 }
 
 function displayNotes() {
-    let notesArea = document.getElementById("notes");
-    let searchText = document.getElementById("search").value.toLowerCase();
+    let area = document.getElementById("notes");
+    let search = document.getElementById("search").value.toLowerCase();
 
-    notesArea.innerHTML = "";
+    area.innerHTML = "";
+
+    let found = 0;
 
     notes.forEach(function(note, index) {
-
         if (
-            !note.title.toLowerCase().includes(searchText) &&
-            !note.text.toLowerCase().includes(searchText)
+            !note.title.toLowerCase().includes(search) &&
+            !note.text.toLowerCase().includes(search)
         ) {
             return;
         }
 
-        let noteBox = document.createElement("div");
+        found++;
 
-        let noteTitle = document.createElement("h3");
-        noteTitle.innerText = note.title;
+        let box = document.createElement("div");
 
-        let newNote = document.createElement("p");
-        newNote.innerText = note.text;
+        let heading = document.createElement("h3");
+        heading.innerText = note.title;
 
-        let noteDate = document.createElement("small");
-        noteDate.innerText = note.date || "";
+        let content = document.createElement("p");
+        content.innerText = note.text;
 
-        let editBtn = document.createElement("button");
-        editBtn.innerText = "Edit";
+        let date = document.createElement("small");
+        date.innerText = note.date || "";
 
-        editBtn.onclick = function() {
-            let updatedTitle = prompt("Edit title:", note.title);
-            if (updatedTitle === null) return;
+        let edit = document.createElement("button");
+        edit.className = "edit-btn";
+        edit.innerText = "Edit";
 
-            let updatedNote = prompt("Edit note:", note.text);
-            if (updatedNote === null) return;
+        edit.onclick = function() {
+            let newTitle = prompt("Edit title:", note.title);
+            if (newTitle === null) return;
 
-            notes[index].title = updatedTitle.trim() || "Untitled";
-            notes[index].text = updatedNote.trim();
+            let newText = prompt("Edit note:", note.text);
+            if (newText === null) return;
+
+            notes[index].title = newTitle.trim() || "Untitled";
+            notes[index].text = newText.trim();
 
             saveNotes();
             displayNotes();
         };
 
-        let deleteBtn = document.createElement("button");
-        deleteBtn.innerText = "Delete";
+        let del = document.createElement("button");
+        del.className = "delete-btn";
+        del.innerText = "Delete";
 
-        deleteBtn.onclick = function() {
+        del.onclick = function() {
             if (confirm("Delete this note?")) {
                 notes.splice(index, 1);
                 saveNotes();
@@ -192,15 +276,19 @@ function displayNotes() {
             }
         };
 
-        noteBox.appendChild(noteTitle);
-        noteBox.appendChild(newNote);
-        noteBox.appendChild(noteDate);
-        noteBox.appendChild(document.createElement("br"));
-        noteBox.appendChild(editBtn);
-        noteBox.appendChild(deleteBtn);
+        box.appendChild(heading);
+        box.appendChild(content);
+        box.appendChild(date);
+        box.appendChild(document.createElement("br"));
+        box.appendChild(edit);
+        box.appendChild(del);
 
-        notesArea.appendChild(noteBox);
+        area.appendChild(box);
     });
+
+    if (found === 0) {
+        area.innerHTML = '<p class="empty">No notes found 📝</p>';
+    }
 }
 
 function toggleDarkMode() {
@@ -222,9 +310,6 @@ if (localStorage.getItem("darkMode") === "on") {
 saveNotes();
 displayNotes();
 
-</script>
-
-<script>
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
         navigator.serviceWorker.register("./service-worker.js");
