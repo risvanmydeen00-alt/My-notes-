@@ -39,7 +39,7 @@ header h1 {
 
 header p { color: #777; margin-top: 5px; }
 
-input, textarea {
+input, textarea, select {
     width: 100%;
     padding: 14px;
     margin: 8px 0;
@@ -106,6 +106,16 @@ small { color: #888; }
 .backup-btn { background: #16875d; }
 .restore-btn { background: #2878bd; }
 
+.category-label {
+    display: inline-block;
+    background: #eeeafd;
+    color: #5146a5;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin: 5px 0;
+}
+
 .dark-mode {
     background: #171725;
     color: white;
@@ -120,7 +130,8 @@ small { color: #888; }
 .dark-mode small { color: #aaa; }
 
 .dark-mode input,
-.dark-mode textarea {
+.dark-mode textarea,
+.dark-mode select {
     background: #29293b;
     color: white;
     border-color: #444;
@@ -131,6 +142,11 @@ small { color: #888; }
 .dark-mode #changePINBox {
     background: #29293b;
     color: white;
+}
+
+.dark-mode .category-label {
+    background: #40365e;
+    color: #ddd0ff;
 }
 
 .empty {
@@ -160,8 +176,13 @@ small { color: #888; }
 }
 
 #changePINBox { display: none; }
-
 #restoreFile { display: none; }
+
+.section-title {
+    margin-top: 20px;
+    color: #5146a5;
+    font-size: 15px;
+}
 </style>
 </head>
 
@@ -191,14 +212,38 @@ small { color: #888; }
         placeholder="🔍 Search notes..."
         oninput="displayNotes()">
 
+    <h3 class="section-title">📝 Create a Note</h3>
+
     <input type="text" id="title"
         placeholder="Enter note title...">
 
     <textarea id="note"
         placeholder="Write your note here..."></textarea>
 
+    <input type="text" id="category"
+        list="categorySuggestions"
+        placeholder="📁 Category (Personal, Work...)">
+
+    <datalist id="categorySuggestions"></datalist>
+
     <div class="actions">
         <button onclick="addNote()">＋ Add Note</button>
+    </div>
+
+    <h3 class="section-title">📁 Categories</h3>
+
+    <input type="text" id="newCategory"
+        placeholder="Create a new category...">
+
+    <div class="actions">
+        <button onclick="addCategory()">＋ Add Category</button>
+    </div>
+
+    <select id="categoryFilter" onchange="displayNotes()">
+        <option value="all">📚 All Categories</option>
+    </select>
+
+    <div class="actions">
 
         <button onclick="toggleDarkMode()" id="darkBtn">
             🌙 Dark Mode
@@ -224,6 +269,7 @@ small { color: #888; }
         <input type="file" id="restoreFile"
             accept=".json,application/json"
             onchange="restoreNotes(event)">
+
     </div>
 
     <div id="notes"></div>
@@ -267,15 +313,23 @@ if (!savedPIN) {
 }
 
 let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
+
+let categories =
+    JSON.parse(localStorage.getItem("myNoteCategories")) || [];
+
 let favOnly = false;
 
+/* OLD NOTES COMPATIBILITY */
+
 notes = notes.map(function(note) {
+
     if (typeof note === "string") {
         return {
             title: "Untitled",
             text: note,
             date: "",
-            favorite: false
+            favorite: false,
+            category: ""
         };
     }
 
@@ -283,14 +337,30 @@ notes = notes.map(function(note) {
         note.favorite = false;
     }
 
+    if (note.category === undefined) {
+        note.category = "";
+    }
+
     return note;
 });
+
+/* SAVE */
 
 function saveNotes() {
     localStorage.setItem("myNotes", JSON.stringify(notes));
 }
 
+function saveCategories() {
+    localStorage.setItem(
+        "myNoteCategories",
+        JSON.stringify(categories)
+    );
+}
+
+/* PIN */
+
 function checkPIN() {
+
     let pin = document.getElementById("pinInput").value;
 
     if (!/^\d{4}$/.test(pin)) {
@@ -312,6 +382,7 @@ function checkPIN() {
     document.getElementById("appContent").style.display = "block";
 
     saveNotes();
+    displayCategories();
     displayNotes();
 }
 
@@ -330,6 +401,7 @@ function hideChangePIN() {
 }
 
 function saveNewPIN() {
+
     let oldPIN = document.getElementById("oldPIN").value;
     let newPIN = document.getElementById("newPIN").value;
     let confirmPIN = document.getElementById("confirmPIN").value;
@@ -365,30 +437,112 @@ function saveNewPIN() {
     document.getElementById("confirmPIN").value = "";
 }
 
+/* CATEGORIES */
+
+function addCategory() {
+
+    let input = document.getElementById("newCategory");
+    let name = input.value.trim();
+
+    if (!name) {
+        alert("Enter a category name!");
+        return;
+    }
+
+    let exists = categories.some(function(category) {
+        return category.toLowerCase() === name.toLowerCase();
+    });
+
+    if (exists) {
+        alert("This category already exists!");
+        return;
+    }
+
+    categories.push(name);
+
+    saveCategories();
+    displayCategories();
+
+    input.value = "";
+
+    alert("Category created successfully! 📁");
+}
+
+function displayCategories() {
+
+    let filter = document.getElementById("categoryFilter");
+    let suggestions = document.getElementById("categorySuggestions");
+
+    let selected = filter.value || "all";
+
+    filter.innerHTML = '<option value="all">📚 All Categories</option>';
+    suggestions.innerHTML = "";
+
+    categories.forEach(function(category) {
+
+        let option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        filter.appendChild(option);
+
+        let suggestion = document.createElement("option");
+        suggestion.value = category;
+        suggestions.appendChild(suggestion);
+    });
+
+    if (categories.includes(selected)) {
+        filter.value = selected;
+    } else {
+        filter.value = "all";
+    }
+}
+
+/* ADD NOTE */
+
 function addNote() {
+
     let title = document.getElementById("title").value;
     let note = document.getElementById("note").value;
+    let category = document.getElementById("category").value.trim();
 
     if (note.trim() === "") {
         alert("Please write something!");
         return;
     }
 
+    if (category) {
+
+        let exists = categories.some(function(item) {
+            return item.toLowerCase() === category.toLowerCase();
+        });
+
+        if (!exists) {
+            categories.push(category);
+            saveCategories();
+        }
+    }
+
     notes.push({
         title: title.trim() || "Untitled",
         text: note.trim(),
         date: new Date().toLocaleString(),
-        favorite: false
+        favorite: false,
+        category: category
     });
 
     saveNotes();
+    displayCategories();
     displayNotes();
 
     document.getElementById("title").value = "";
     document.getElementById("note").value = "";
+    document.getElementById("category").value = "";
 }
 
+/* FAVORITES */
+
 function toggleFavorites() {
+
     favOnly = !favOnly;
 
     document.getElementById("filterBtn").innerText =
@@ -397,17 +551,24 @@ function toggleFavorites() {
     displayNotes();
 }
 
+/* DISPLAY NOTES */
+
 function displayNotes() {
+
     let area = document.getElementById("notes");
     let search = document.getElementById("search").value.toLowerCase();
+    let selectedCategory = document.getElementById("categoryFilter").value;
 
     area.innerHTML = "";
+
     let found = 0;
 
     notes.forEach(function(note, index) {
+
         if (
             !note.title.toLowerCase().includes(search) &&
-            !note.text.toLowerCase().includes(search)
+            !note.text.toLowerCase().includes(search) &&
+            !(note.category || "").toLowerCase().includes(search)
         ) {
             return;
         }
@@ -416,18 +577,40 @@ function displayNotes() {
             return;
         }
 
+        if (
+            selectedCategory !== "all" &&
+            note.category !== selectedCategory
+        ) {
+            return;
+        }
+
         found++;
 
         let box = document.createElement("div");
 
         let heading = document.createElement("h3");
-        heading.innerText = (note.favorite ? "⭐ " : "") + note.title;
+        heading.innerText =
+            (note.favorite ? "⭐ " : "") + note.title;
 
         let content = document.createElement("p");
         content.innerText = note.text;
 
         let date = document.createElement("small");
         date.innerText = note.date || "";
+
+        box.appendChild(heading);
+        box.appendChild(content);
+
+        if (note.category) {
+            let label = document.createElement("div");
+            label.className = "category-label";
+            label.innerText = "📁 " + note.category;
+            box.appendChild(label);
+        }
+
+        box.appendChild(document.createElement("br"));
+        box.appendChild(date);
+        box.appendChild(document.createElement("br"));
 
         let fav = document.createElement("button");
         fav.className = "fav-btn";
@@ -444,16 +627,40 @@ function displayNotes() {
         edit.innerText = "Edit";
 
         edit.onclick = function() {
+
             let newTitle = prompt("Edit title:", note.title);
             if (newTitle === null) return;
 
             let newText = prompt("Edit note:", note.text);
             if (newText === null) return;
 
+            let newCategory = prompt(
+                "Edit category:",
+                note.category || ""
+            );
+
+            if (newCategory === null) return;
+
+            newCategory = newCategory.trim();
+
+            if (newCategory) {
+
+                let exists = categories.some(function(item) {
+                    return item.toLowerCase() === newCategory.toLowerCase();
+                });
+
+                if (!exists) {
+                    categories.push(newCategory);
+                    saveCategories();
+                }
+            }
+
             notes[index].title = newTitle.trim() || "Untitled";
             notes[index].text = newText.trim();
+            notes[index].category = newCategory;
 
             saveNotes();
+            displayCategories();
             displayNotes();
         };
 
@@ -462,6 +669,7 @@ function displayNotes() {
         del.innerText = "Delete";
 
         del.onclick = function() {
+
             if (confirm("Delete this note?")) {
                 notes.splice(index, 1);
                 saveNotes();
@@ -469,10 +677,6 @@ function displayNotes() {
             }
         };
 
-        box.appendChild(heading);
-        box.appendChild(content);
-        box.appendChild(date);
-        box.appendChild(document.createElement("br"));
         box.appendChild(fav);
         box.appendChild(edit);
         box.appendChild(del);
@@ -481,20 +685,21 @@ function displayNotes() {
     });
 
     if (found === 0) {
-        area.innerHTML = favOnly
-            ? '<p class="empty">No favourite notes ⭐</p>'
-            : '<p class="empty">No notes found 📝</p>';
+        area.innerHTML =
+            '<p class="empty">No notes found 📝</p>';
     }
 }
 
 /* BACKUP */
 
 function backupNotes() {
+
     let backup = {
         app: "NoteBook",
-        version: 1,
+        version: 2,
         backupDate: new Date().toISOString(),
-        notes: notes
+        notes: notes,
+        categories: categories
     };
 
     let data = JSON.stringify(backup, null, 2);
@@ -528,6 +733,7 @@ function openRestore() {
 }
 
 function restoreNotes(event) {
+
     let file = event.target.files[0];
 
     if (!file) return;
@@ -535,19 +741,27 @@ function restoreNotes(event) {
     let reader = new FileReader();
 
     reader.onload = function() {
+
         try {
+
             let backup = JSON.parse(reader.result);
 
             let importedNotes = Array.isArray(backup)
                 ? backup
                 : backup.notes;
 
-            if (!Array.isArray(importedNotes)) {
+            let importedCategories = Array.isArray(backup)
+                ? []
+                : (backup.categories || []);
+
+            if (!Array.isArray(importedNotes) ||
+                !Array.isArray(importedCategories)) {
                 alert("Invalid NoteBook backup file!");
                 return;
             }
 
             let validNotes = importedNotes.filter(function(note) {
+
                 return note &&
                     typeof note.title === "string" &&
                     typeof note.text === "string";
@@ -558,9 +772,17 @@ function restoreNotes(event) {
                 return;
             }
 
+            if (!importedCategories.every(function(item) {
+                return typeof item === "string";
+            })) {
+                alert("Backup contains invalid categories!");
+                return;
+            }
+
             if (!confirm(
                 "Restore " + validNotes.length +
-                " notes? Existing notes will be kept."
+                " notes and " + importedCategories.length +
+                " categories? Existing data will be kept."
             )) {
                 return;
             }
@@ -568,24 +790,44 @@ function restoreNotes(event) {
             let added = 0;
 
             validNotes.forEach(function(note) {
+
                 let exists = notes.some(function(current) {
+
                     return current.title === note.title &&
                         current.text === note.text &&
-                        current.date === note.date;
+                        current.date === note.date &&
+                        (current.category || "") === (note.category || "");
                 });
 
                 if (!exists) {
+
                     notes.push({
                         title: note.title,
                         text: note.text,
                         date: note.date || "",
-                        favorite: !!note.favorite
+                        favorite: !!note.favorite,
+                        category: note.category || ""
                     });
+
                     added++;
                 }
             });
 
+            importedCategories.forEach(function(category) {
+
+                let exists = categories.some(function(current) {
+                    return current.toLowerCase() === category.toLowerCase();
+                });
+
+                if (!exists) {
+                    categories.push(category);
+                }
+            });
+
             saveNotes();
+            saveCategories();
+
+            displayCategories();
             displayNotes();
 
             alert(
@@ -594,6 +836,7 @@ function restoreNotes(event) {
             );
 
         } catch (error) {
+
             alert("Unable to read backup file!");
         }
 
@@ -603,7 +846,10 @@ function restoreNotes(event) {
     reader.readAsText(file);
 }
 
+/* DARK MODE */
+
 function toggleDarkMode() {
+
     document.body.classList.toggle("dark-mode");
 
     let dark = document.body.classList.contains("dark-mode");
@@ -615,17 +861,15 @@ function toggleDarkMode() {
 }
 
 if (localStorage.getItem("darkMode") === "on") {
+
     document.body.classList.add("dark-mode");
-    document.getElementById("darkBtn").innerText = "☀️ Light Mode";
+
+    document.getElementById("darkBtn").innerText =
+        "☀️ Light Mode";
 }
+
+/* SERVICE WORKER */
 
 if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function() {
-        navigator.serviceWorker.register("./service-worker.js");
-    });
-}
 
-</script>
-
-</body>
-</html>
+    wind
