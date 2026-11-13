@@ -9,7 +9,6 @@
 
 <style>
 * { box-sizing: border-box; }
-
 html, body { overscroll-behavior-y: none; }
 
 body {
@@ -21,15 +20,9 @@ body {
     transition: 0.3s;
 }
 
-.container {
-    max-width: 600px;
-    margin: auto;
-}
+.container { max-width: 600px; margin: auto; }
 
-header {
-    text-align: center;
-    padding: 20px 0;
-}
+header { text-align: center; padding: 20px 0; }
 
 header h1 {
     color: #5146a5;
@@ -49,10 +42,7 @@ input, textarea, select {
     background: white;
 }
 
-textarea {
-    height: 130px;
-    resize: vertical;
-}
+textarea { height: 130px; resize: vertical; }
 
 button {
     border: none;
@@ -83,28 +73,18 @@ button {
     overflow-wrap: anywhere;
 }
 
-#notes h3 {
-    color: #5146a5;
-    margin-top: 0;
-}
+#notes h3 { color: #5146a5; margin-top: 0; }
 
-#notes p {
-    white-space: pre-wrap;
-    line-height: 1.5;
-}
+#notes p { white-space: pre-wrap; line-height: 1.5; }
 
 small { color: #888; }
 
 .delete-btn { background: #dc4545; }
 .edit-btn { background: #7770bd; }
-
-.fav-btn, .filter-btn {
-    background: #e8b323;
-    color: #25233a;
-}
-
+.fav-btn, .filter-btn { background: #e8b323; color: #25233a; }
 .backup-btn { background: #16875d; }
 .restore-btn { background: #2878bd; }
+.pin-btn { background: #5146a5; }
 
 .category-label {
     display: inline-block;
@@ -116,15 +96,20 @@ small { color: #888; }
     margin: 5px 0;
 }
 
-.dark-mode {
-    background: #171725;
-    color: white;
+.pinned-label {
+    display: inline-block;
+    background: #fff0c2;
+    color: #8a5a00;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin: 5px 0;
 }
 
+.dark-mode { background: #171725; color: white; }
+
 .dark-mode header h1,
-.dark-mode #notes h3 {
-    color: #c4b5fd;
-}
+.dark-mode #notes h3 { color: #c4b5fd; }
 
 .dark-mode header p,
 .dark-mode small { color: #aaa; }
@@ -149,11 +134,7 @@ small { color: #888; }
     color: #ddd0ff;
 }
 
-.empty {
-    text-align: center;
-    color: #888;
-    padding: 25px;
-}
+.empty { text-align: center; color: #888; padding: 25px; }
 
 #lockScreen, #changePINBox {
     max-width: 400px;
@@ -165,9 +146,7 @@ small { color: #888; }
     box-shadow: 0 4px 15px #00000012;
 }
 
-#lockScreen h1, #changePINBox h2 {
-    color: #5146a5;
-}
+#lockScreen h1, #changePINBox h2 { color: #5146a5; }
 
 #pinInput, #oldPIN, #newPIN, #confirmPIN {
     text-align: center;
@@ -214,11 +193,9 @@ small { color: #888; }
 
     <h3 class="section-title">📝 Create a Note</h3>
 
-    <input type="text" id="title"
-        placeholder="Enter note title...">
+    <input type="text" id="title" placeholder="Enter note title...">
 
-    <textarea id="note"
-        placeholder="Write your note here..."></textarea>
+    <textarea id="note" placeholder="Write your note here..."></textarea>
 
     <input type="text" id="category"
         list="categorySuggestions"
@@ -244,32 +221,21 @@ small { color: #888; }
     </select>
 
     <div class="actions">
+        <button onclick="toggleDarkMode()" id="darkBtn">🌙 Dark Mode</button>
 
-        <button onclick="toggleDarkMode()" id="darkBtn">
-            🌙 Dark Mode
-        </button>
-
-        <button onclick="toggleFavorites()"
-            id="filterBtn" class="filter-btn">
+        <button onclick="toggleFavorites()" id="filterBtn" class="filter-btn">
             ⭐ Favorites
         </button>
 
-        <button onclick="showChangePIN()">
-            🔐 Change PIN
-        </button>
+        <button onclick="showChangePIN()">🔐 Change PIN</button>
 
-        <button onclick="backupNotes()" class="backup-btn">
-            📤 Backup
-        </button>
+        <button onclick="backupNotes()" class="backup-btn">📤 Backup</button>
 
-        <button onclick="openRestore()" class="restore-btn">
-            📥 Restore
-        </button>
+        <button onclick="openRestore()" class="restore-btn">📥 Restore</button>
 
         <input type="file" id="restoreFile"
             accept=".json,application/json"
             onchange="restoreNotes(event)">
-
     </div>
 
     <div id="notes"></div>
@@ -278,16 +244,13 @@ small { color: #888; }
         <h2>🔐 Change PIN</h2>
 
         <input type="password" id="oldPIN"
-            maxlength="4" inputmode="numeric"
-            placeholder="Old PIN">
+            maxlength="4" inputmode="numeric" placeholder="Old PIN">
 
         <input type="password" id="newPIN"
-            maxlength="4" inputmode="numeric"
-            placeholder="New 4-digit PIN">
+            maxlength="4" inputmode="numeric" placeholder="New 4-digit PIN">
 
         <input type="password" id="confirmPIN"
-            maxlength="4" inputmode="numeric"
-            placeholder="Confirm new PIN">
+            maxlength="4" inputmode="numeric" placeholder="Confirm new PIN">
 
         <button onclick="saveNewPIN()">Save PIN</button>
         <button onclick="hideChangePIN()">Cancel</button>
@@ -302,44 +265,32 @@ small { color: #888; }
 let savedPIN = localStorage.getItem("myNotesPIN");
 
 if (!savedPIN) {
-    document.querySelector("#lockScreen h1").innerText =
-        "🔐 Create Your PIN";
-
-    document.querySelector("#lockScreen p").innerText =
-        "Set your 4-digit PIN";
-
-    document.querySelector("#lockScreen button").innerText =
-        "Set PIN";
+    document.querySelector("#lockScreen h1").innerText = "🔐 Create Your PIN";
+    document.querySelector("#lockScreen p").innerText = "Set your 4-digit PIN";
+    document.querySelector("#lockScreen button").innerText = "Set PIN";
 }
 
 let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
-
-let categories =
-    JSON.parse(localStorage.getItem("myNoteCategories")) || [];
-
+let categories = JSON.parse(localStorage.getItem("myNoteCategories")) || [];
 let favOnly = false;
 
 /* OLD NOTES COMPATIBILITY */
 
 notes = notes.map(function(note) {
-
     if (typeof note === "string") {
         return {
             title: "Untitled",
             text: note,
             date: "",
             favorite: false,
-            category: ""
+            category: "",
+            pinned: false
         };
     }
 
-    if (note.favorite === undefined) {
-        note.favorite = false;
-    }
-
-    if (note.category === undefined) {
-        note.category = "";
-    }
+    if (note.favorite === undefined) note.favorite = false;
+    if (note.category === undefined) note.category = "";
+    if (note.pinned === undefined) note.pinned = false;
 
     return note;
 });
@@ -351,21 +302,16 @@ function saveNotes() {
 }
 
 function saveCategories() {
-    localStorage.setItem(
-        "myNoteCategories",
-        JSON.stringify(categories)
-    );
+    localStorage.setItem("myNoteCategories", JSON.stringify(categories));
 }
 
-/* PIN */
+/* PIN LOCK */
 
 function checkPIN() {
-
     let pin = document.getElementById("pinInput").value;
 
     if (!/^\d{4}$/.test(pin)) {
-        document.getElementById("pinMessage").innerText =
-            "Enter exactly 4 digits!";
+        document.getElementById("pinMessage").innerText = "Enter exactly 4 digits!";
         return;
     }
 
@@ -373,8 +319,7 @@ function checkPIN() {
         localStorage.setItem("myNotesPIN", pin);
         savedPIN = pin;
     } else if (pin !== savedPIN) {
-        document.getElementById("pinMessage").innerText =
-            "Wrong PIN! Try again.";
+        document.getElementById("pinMessage").innerText = "Wrong PIN! Try again.";
         return;
     }
 
@@ -393,7 +338,6 @@ function showChangePIN() {
 
 function hideChangePIN() {
     document.getElementById("changePINBox").style.display = "none";
-
     document.getElementById("oldPIN").value = "";
     document.getElementById("newPIN").value = "";
     document.getElementById("confirmPIN").value = "";
@@ -401,7 +345,6 @@ function hideChangePIN() {
 }
 
 function saveNewPIN() {
-
     let oldPIN = document.getElementById("oldPIN").value;
     let newPIN = document.getElementById("newPIN").value;
     let confirmPIN = document.getElementById("confirmPIN").value;
@@ -429,7 +372,6 @@ function saveNewPIN() {
 
     localStorage.setItem("myNotesPIN", newPIN);
     savedPIN = newPIN;
-
     message.innerText = "PIN changed successfully! ✅";
 
     document.getElementById("oldPIN").value = "";
@@ -440,7 +382,6 @@ function saveNewPIN() {
 /* CATEGORIES */
 
 function addCategory() {
-
     let input = document.getElementById("newCategory");
     let name = input.value.trim();
 
@@ -459,27 +400,21 @@ function addCategory() {
     }
 
     categories.push(name);
-
     saveCategories();
     displayCategories();
-
     input.value = "";
-
     alert("Category created successfully! 📁");
 }
 
 function displayCategories() {
-
     let filter = document.getElementById("categoryFilter");
     let suggestions = document.getElementById("categorySuggestions");
-
     let selected = filter.value || "all";
 
     filter.innerHTML = '<option value="all">📚 All Categories</option>';
     suggestions.innerHTML = "";
 
     categories.forEach(function(category) {
-
         let option = document.createElement("option");
         option.value = category;
         option.textContent = category;
@@ -490,17 +425,12 @@ function displayCategories() {
         suggestions.appendChild(suggestion);
     });
 
-    if (categories.includes(selected)) {
-        filter.value = selected;
-    } else {
-        filter.value = "all";
-    }
+    filter.value = categories.includes(selected) ? selected : "all";
 }
 
 /* ADD NOTE */
 
 function addNote() {
-
     let title = document.getElementById("title").value;
     let note = document.getElementById("note").value;
     let category = document.getElementById("category").value.trim();
@@ -511,7 +441,6 @@ function addNote() {
     }
 
     if (category) {
-
         let exists = categories.some(function(item) {
             return item.toLowerCase() === category.toLowerCase();
         });
@@ -527,7 +456,8 @@ function addNote() {
         text: note.trim(),
         date: new Date().toLocaleString(),
         favorite: false,
-        category: category
+        category: category,
+        pinned: false
     });
 
     saveNotes();
@@ -542,7 +472,6 @@ function addNote() {
 /* FAVORITES */
 
 function toggleFavorites() {
-
     favOnly = !favOnly;
 
     document.getElementById("filterBtn").innerText =
@@ -551,36 +480,48 @@ function toggleFavorites() {
     displayNotes();
 }
 
+/* PIN / UNPIN NOTE */
+
+function togglePin(index) {
+    notes[index].pinned = !notes[index].pinned;
+    saveNotes();
+    displayNotes();
+}
+
 /* DISPLAY NOTES */
 
 function displayNotes() {
-
     let area = document.getElementById("notes");
     let search = document.getElementById("search").value.toLowerCase();
     let selectedCategory = document.getElementById("categoryFilter").value;
 
     area.innerHTML = "";
-
     let found = 0;
 
-    notes.forEach(function(note, index) {
+    // Pinned notes first; original array indexes are preserved.
+    let sortedNotes = notes.map(function(note, index) {
+        return { note: note, index: index };
+    });
+
+    sortedNotes.sort(function(a, b) {
+        return Number(!!b.note.pinned) - Number(!!a.note.pinned);
+    });
+
+    sortedNotes.forEach(function(item) {
+        let note = item.note;
+        let index = item.index;
 
         if (
-            !note.title.toLowerCase().includes(search) &&
-            !note.text.toLowerCase().includes(search) &&
-            !(note.category || "").toLowerCase().includes(search)
+            !String(note.title || "").toLowerCase().includes(search) &&
+            !String(note.text || "").toLowerCase().includes(search) &&
+            !String(note.category || "").toLowerCase().includes(search)
         ) {
             return;
         }
 
-        if (favOnly && !note.favorite) {
-            return;
-        }
+        if (favOnly && !note.favorite) return;
 
-        if (
-            selectedCategory !== "all" &&
-            note.category !== selectedCategory
-        ) {
+        if (selectedCategory !== "all" && note.category !== selectedCategory) {
             return;
         }
 
@@ -590,7 +531,9 @@ function displayNotes() {
 
         let heading = document.createElement("h3");
         heading.innerText =
-            (note.favorite ? "⭐ " : "") + note.title;
+            (note.pinned ? "📌 " : "") +
+            (note.favorite ? "⭐ " : "") +
+            note.title;
 
         let content = document.createElement("p");
         content.innerText = note.text;
@@ -600,6 +543,13 @@ function displayNotes() {
 
         box.appendChild(heading);
         box.appendChild(content);
+
+        if (note.pinned) {
+            let pinLabel = document.createElement("div");
+            pinLabel.className = "pinned-label";
+            pinLabel.innerText = "📌 Pinned";
+            box.appendChild(pinLabel);
+        }
 
         if (note.category) {
             let label = document.createElement("div");
@@ -611,6 +561,14 @@ function displayNotes() {
         box.appendChild(document.createElement("br"));
         box.appendChild(date);
         box.appendChild(document.createElement("br"));
+
+        let pin = document.createElement("button");
+        pin.className = "pin-btn";
+        pin.innerText = note.pinned ? "📌 Unpin" : "📌 Pin";
+
+        pin.onclick = function() {
+            togglePin(index);
+        };
 
         let fav = document.createElement("button");
         fav.className = "fav-btn";
@@ -627,24 +585,18 @@ function displayNotes() {
         edit.innerText = "Edit";
 
         edit.onclick = function() {
-
             let newTitle = prompt("Edit title:", note.title);
             if (newTitle === null) return;
 
             let newText = prompt("Edit note:", note.text);
             if (newText === null) return;
 
-            let newCategory = prompt(
-                "Edit category:",
-                note.category || ""
-            );
-
+            let newCategory = prompt("Edit category:", note.category || "");
             if (newCategory === null) return;
 
             newCategory = newCategory.trim();
 
             if (newCategory) {
-
                 let exists = categories.some(function(item) {
                     return item.toLowerCase() === newCategory.toLowerCase();
                 });
@@ -669,7 +621,6 @@ function displayNotes() {
         del.innerText = "Delete";
 
         del.onclick = function() {
-
             if (confirm("Delete this note?")) {
                 notes.splice(index, 1);
                 saveNotes();
@@ -677,6 +628,7 @@ function displayNotes() {
             }
         };
 
+        box.appendChild(pin);
         box.appendChild(fav);
         box.appendChild(edit);
         box.appendChild(del);
@@ -685,29 +637,23 @@ function displayNotes() {
     });
 
     if (found === 0) {
-        area.innerHTML =
-            '<p class="empty">No notes found 📝</p>';
+        area.innerHTML = '<p class="empty">No notes found 📝</p>';
     }
 }
 
 /* BACKUP */
 
 function backupNotes() {
-
     let backup = {
         app: "NoteBook",
-        version: 2,
+        version: 3,
         backupDate: new Date().toISOString(),
         notes: notes,
         categories: categories
     };
 
     let data = JSON.stringify(backup, null, 2);
-
-    let blob = new Blob([data], {
-        type: "application/json"
-    });
-
+    let blob = new Blob([data], { type: "application/json" });
     let url = URL.createObjectURL(blob);
 
     let link = document.createElement("a");
@@ -733,17 +679,13 @@ function openRestore() {
 }
 
 function restoreNotes(event) {
-
     let file = event.target.files[0];
-
     if (!file) return;
 
     let reader = new FileReader();
 
     reader.onload = function() {
-
         try {
-
             let backup = JSON.parse(reader.result);
 
             let importedNotes = Array.isArray(backup)
@@ -761,7 +703,6 @@ function restoreNotes(event) {
             }
 
             let validNotes = importedNotes.filter(function(note) {
-
                 return note &&
                     typeof note.title === "string" &&
                     typeof note.text === "string";
@@ -790,9 +731,7 @@ function restoreNotes(event) {
             let added = 0;
 
             validNotes.forEach(function(note) {
-
                 let exists = notes.some(function(current) {
-
                     return current.title === note.title &&
                         current.text === note.text &&
                         current.date === note.date &&
@@ -800,13 +739,13 @@ function restoreNotes(event) {
                 });
 
                 if (!exists) {
-
                     notes.push({
                         title: note.title,
                         text: note.text,
                         date: note.date || "",
                         favorite: !!note.favorite,
-                        category: note.category || ""
+                        category: note.category || "",
+                        pinned: !!note.pinned
                     });
 
                     added++;
@@ -814,29 +753,21 @@ function restoreNotes(event) {
             });
 
             importedCategories.forEach(function(category) {
-
                 let exists = categories.some(function(current) {
                     return current.toLowerCase() === category.toLowerCase();
                 });
 
-                if (!exists) {
-                    categories.push(category);
-                }
+                if (!exists) categories.push(category);
             });
 
             saveNotes();
             saveCategories();
-
             displayCategories();
             displayNotes();
 
-            alert(
-                "Restore completed! ✅\n" +
-                added + " new notes added."
-            );
+            alert("Restore completed! ✅\n" + added + " new notes added.");
 
         } catch (error) {
-
             alert("Unable to read backup file!");
         }
 
@@ -849,11 +780,9 @@ function restoreNotes(event) {
 /* DARK MODE */
 
 function toggleDarkMode() {
-
     document.body.classList.toggle("dark-mode");
 
     let dark = document.body.classList.contains("dark-mode");
-
     localStorage.setItem("darkMode", dark ? "on" : "off");
 
     document.getElementById("darkBtn").innerText =
@@ -861,11 +790,8 @@ function toggleDarkMode() {
 }
 
 if (localStorage.getItem("darkMode") === "on") {
-
     document.body.classList.add("dark-mode");
-
-    document.getElementById("darkBtn").innerText =
-        "☀️ Light Mode";
+    document.getElementById("darkBtn").innerText = "☀️ Light Mode";
 }
 
 /* SERVICE WORKER */
