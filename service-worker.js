@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "my-notes-v5";
+const CACHE_NAME = "my-notes-v6";
 
 const FILES_TO_CACHE = [
     "./",
@@ -37,12 +37,28 @@ self.addEventListener("activate", function(event) {
 self.addEventListener("fetch", function(event) {
     if (event.request.method !== "GET") return;
 
+    if (event.request.mode === "navigate" ||
+        event.request.url.endsWith("/index.html")) {
+
+        event.respondWith(
+            fetch(event.request, { cache: "no-store" })
+                .then(function(response) {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then(function(cache) {
+                        cache.put("./index.html", copy);
+                    });
+                    return response;
+                })
+                .catch(function() {
+                    return caches.match("./index.html");
+                })
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then(function(response) {
-            return response || fetch(event.request).catch(function() {
-                return caches.match("./index.html");
-            });
+            return response || fetch(event.request);
         })
     );
 });
-                      
