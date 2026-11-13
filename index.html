@@ -156,45 +156,123 @@ small {
     color: #888;
     padding: 25px;
 }
+
+#lockScreen {
+    max-width: 400px;
+    margin: 60px auto;
+    text-align: center;
+    padding: 30px 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px #00000012;
+}
+
+#lockScreen h1 {
+    color: #5146a5;
+}
+
+#pinInput {
+    text-align: center;
+    letter-spacing: 8px;
+    font-size: 22px;
+}
+
+.dark-mode #lockScreen {
+    background: #29293b;
+    color: white;
+}
+
+.dark-mode #lockScreen h1 {
+    color: #c4b5fd;
+}
 </style>
 </head>
 
 <body>
-<div class="container">
 
-<header>
-    <h1>My Notes ✨</h1>
-    <p>Your personal notebook</p>
-</header>
+<div id="lockScreen">
+    <h1>🔐 My Notes Locked</h1>
+    <p>Enter your 4-digit PIN</p>
 
-<input type="text" id="search"
-placeholder="🔍 Search notes..." oninput="displayNotes()">
+    <input
+        type="password"
+        id="pinInput"
+        maxlength="4"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        autocomplete="off"
+        placeholder="Enter PIN"
+    >
 
-<input type="text" id="title"
-placeholder="Enter note title...">
-
-<textarea id="note"
-placeholder="Write your note here..."></textarea>
-
-<div class="actions">
-    <button onclick="addNote()">＋ Add Note</button>
-    <button onclick="toggleDarkMode()" id="darkBtn">
-        🌙 Dark Mode
-    </button>
-    <button onclick="toggleFavorites()" id="filterBtn" class="filter-btn">
-        ⭐ Favorites
-    </button>
+    <button onclick="checkPIN()">Unlock</button>
+    <p id="pinMessage"></p>
 </div>
 
-<div id="notes"></div>
+<div class="container" id="appContent" style="display:none;">
+
+    <header>
+        <h1>My Notes ✨</h1>
+        <p>Your personal notebook</p>
+    </header>
+
+    <input
+        type="text"
+        id="search"
+        placeholder="🔍 Search notes..."
+        oninput="displayNotes()"
+    >
+
+    <input
+        type="text"
+        id="title"
+        placeholder="Enter note title..."
+    >
+
+    <textarea
+        id="note"
+        placeholder="Write your note here..."
+    ></textarea>
+
+    <div class="actions">
+        <button onclick="addNote()">＋ Add Note</button>
+
+        <button onclick="toggleDarkMode()" id="darkBtn">
+            🌙 Dark Mode
+        </button>
+
+        <button
+            onclick="toggleFavorites()"
+            id="filterBtn"
+            class="filter-btn"
+        >
+            ⭐ Favorites
+        </button>
+    </div>
+
+    <div id="notes"></div>
 
 </div>
 
 <script>
+
+let savedPIN = localStorage.getItem("myNotesPIN");
+
+if (!savedPIN) {
+    document.querySelector("#lockScreen h1").innerText =
+        "🔐 Create Your PIN";
+
+    document.querySelector("#lockScreen p").innerText =
+        "Set your 4-digit PIN";
+
+    document.querySelector("#lockScreen button").innerText =
+        "Set PIN";
+}
+
 let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
 let favOnly = false;
 
 notes = notes.map(function(note) {
+
     if (typeof note === "string") {
         return {
             title: "Untitled",
@@ -215,7 +293,37 @@ function saveNotes() {
     localStorage.setItem("myNotes", JSON.stringify(notes));
 }
 
+function checkPIN() {
+
+    let pin = document.getElementById("pinInput").value;
+
+    if (!/^\d{4}$/.test(pin)) {
+        document.getElementById("pinMessage").innerText =
+            "Enter exactly 4 digits!";
+        return;
+    }
+
+    if (!savedPIN) {
+
+        localStorage.setItem("myNotesPIN", pin);
+        savedPIN = pin;
+
+    } else if (pin !== savedPIN) {
+
+        document.getElementById("pinMessage").innerText =
+            "Wrong PIN! Try again.";
+        return;
+    }
+
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("appContent").style.display = "block";
+
+    saveNotes();
+    displayNotes();
+}
+
 function addNote() {
+
     let title = document.getElementById("title").value;
     let note = document.getElementById("note").value;
 
@@ -239,6 +347,7 @@ function addNote() {
 }
 
 function toggleFavorites() {
+
     favOnly = !favOnly;
 
     document.getElementById("filterBtn").innerText =
@@ -248,6 +357,7 @@ function toggleFavorites() {
 }
 
 function displayNotes() {
+
     let area = document.getElementById("notes");
     let search = document.getElementById("search").value.toLowerCase();
 
@@ -297,6 +407,7 @@ function displayNotes() {
         edit.innerText = "Edit";
 
         edit.onclick = function() {
+
             let newTitle = prompt("Edit title:", note.title);
             if (newTitle === null) return;
 
@@ -315,6 +426,7 @@ function displayNotes() {
         del.innerText = "Delete";
 
         del.onclick = function() {
+
             if (confirm("Delete this note?")) {
                 notes.splice(index, 1);
                 saveNotes();
@@ -341,6 +453,7 @@ function displayNotes() {
 }
 
 function toggleDarkMode() {
+
     document.body.classList.toggle("dark-mode");
 
     let dark = document.body.classList.contains("dark-mode");
@@ -352,18 +465,22 @@ function toggleDarkMode() {
 }
 
 if (localStorage.getItem("darkMode") === "on") {
-    document.body.classList.add("dark-mode");
-    document.getElementById("darkBtn").innerText = "☀️ Light Mode";
-}
 
-saveNotes();
-displayNotes();
+    document.body.classList.add("dark-mode");
+
+    document.getElementById("darkBtn").innerText =
+        "☀️ Light Mode";
+}
 
 if ("serviceWorker" in navigator) {
+
     window.addEventListener("load", function() {
+
         navigator.serviceWorker.register("./service-worker.js");
+
     });
 }
+
 </script>
 
 </body>
