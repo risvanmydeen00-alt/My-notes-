@@ -8,13 +8,9 @@
     <link rel="manifest" href="manifest.json">
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html, body {
-    overscroll-behavior-y: none;
-}
+html, body { overscroll-behavior-y: none; }
 
 body {
     font-family: Arial, sans-serif;
@@ -41,10 +37,7 @@ header h1 {
     margin-bottom: 5px;
 }
 
-header p {
-    color: #777;
-    margin-top: 5px;
-}
+header p { color: #777; margin-top: 5px; }
 
 input, textarea {
     width: 100%;
@@ -79,9 +72,7 @@ button {
     justify-content: center;
 }
 
-#notes {
-    margin-top: 20px;
-}
+#notes { margin-top: 20px; }
 
 #notes > div {
     background: white;
@@ -102,24 +93,12 @@ button {
     line-height: 1.5;
 }
 
-small {
-    color: #888;
-}
+small { color: #888; }
 
-.delete-btn {
-    background: #dc4545;
-}
+.delete-btn { background: #dc4545; }
+.edit-btn { background: #7770bd; }
 
-.edit-btn {
-    background: #7770bd;
-}
-
-.fav-btn {
-    background: #e8b323;
-    color: #25233a;
-}
-
-.filter-btn {
+.fav-btn, .filter-btn {
     background: #e8b323;
     color: #25233a;
 }
@@ -135,9 +114,7 @@ small {
 }
 
 .dark-mode header p,
-.dark-mode small {
-    color: #aaa;
-}
+.dark-mode small { color: #aaa; }
 
 .dark-mode input,
 .dark-mode textarea {
@@ -146,7 +123,9 @@ small {
     border-color: #444;
 }
 
-.dark-mode #notes > div {
+.dark-mode #notes > div,
+.dark-mode #lockScreen,
+.dark-mode #changePINBox {
     background: #29293b;
     color: white;
 }
@@ -157,7 +136,7 @@ small {
     padding: 25px;
 }
 
-#lockScreen {
+#lockScreen, #changePINBox {
     max-width: 400px;
     margin: 60px auto;
     text-align: center;
@@ -167,24 +146,17 @@ small {
     box-shadow: 0 4px 15px #00000012;
 }
 
-#lockScreen h1 {
+#lockScreen h1, #changePINBox h2 {
     color: #5146a5;
 }
 
-#pinInput {
+#pinInput, #oldPIN, #newPIN, #confirmPIN {
     text-align: center;
     letter-spacing: 8px;
     font-size: 22px;
 }
 
-.dark-mode #lockScreen {
-    background: #29293b;
-    color: white;
-}
-
-.dark-mode #lockScreen h1 {
-    color: #c4b5fd;
-}
+#changePINBox { display: none; }
 </style>
 </head>
 
@@ -194,15 +166,10 @@ small {
     <h1>🔐 My Notes Locked</h1>
     <p>Enter your 4-digit PIN</p>
 
-    <input
-        type="password"
-        id="pinInput"
-        maxlength="4"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        autocomplete="off"
-        placeholder="Enter PIN"
-    >
+    <input type="password" id="pinInput"
+        maxlength="4" inputmode="numeric"
+        pattern="[0-9]*" autocomplete="off"
+        placeholder="Enter PIN">
 
     <button onclick="checkPIN()">Unlock</button>
     <p id="pinMessage"></p>
@@ -215,23 +182,15 @@ small {
         <p>Your personal notebook</p>
     </header>
 
-    <input
-        type="text"
-        id="search"
+    <input type="text" id="search"
         placeholder="🔍 Search notes..."
-        oninput="displayNotes()"
-    >
+        oninput="displayNotes()">
 
-    <input
-        type="text"
-        id="title"
-        placeholder="Enter note title..."
-    >
+    <input type="text" id="title"
+        placeholder="Enter note title...">
 
-    <textarea
-        id="note"
-        placeholder="Write your note here..."
-    ></textarea>
+    <textarea id="note"
+        placeholder="Write your note here..."></textarea>
 
     <div class="actions">
         <button onclick="addNote()">＋ Add Note</button>
@@ -240,16 +199,38 @@ small {
             🌙 Dark Mode
         </button>
 
-        <button
-            onclick="toggleFavorites()"
-            id="filterBtn"
-            class="filter-btn"
-        >
+        <button onclick="toggleFavorites()"
+            id="filterBtn" class="filter-btn">
             ⭐ Favorites
+        </button>
+
+        <button onclick="showChangePIN()">
+            🔐 Change PIN
         </button>
     </div>
 
     <div id="notes"></div>
+
+    <div id="changePINBox">
+        <h2>🔐 Change PIN</h2>
+
+        <input type="password" id="oldPIN"
+            maxlength="4" inputmode="numeric"
+            placeholder="Old PIN">
+
+        <input type="password" id="newPIN"
+            maxlength="4" inputmode="numeric"
+            placeholder="New 4-digit PIN">
+
+        <input type="password" id="confirmPIN"
+            maxlength="4" inputmode="numeric"
+            placeholder="Confirm new PIN">
+
+        <button onclick="saveNewPIN()">Save PIN</button>
+        <button onclick="hideChangePIN()">Cancel</button>
+
+        <p id="changePINMessage"></p>
+    </div>
 
 </div>
 
@@ -272,7 +253,6 @@ let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
 let favOnly = false;
 
 notes = notes.map(function(note) {
-
     if (typeof note === "string") {
         return {
             title: "Untitled",
@@ -294,7 +274,6 @@ function saveNotes() {
 }
 
 function checkPIN() {
-
     let pin = document.getElementById("pinInput").value;
 
     if (!/^\d{4}$/.test(pin)) {
@@ -304,12 +283,9 @@ function checkPIN() {
     }
 
     if (!savedPIN) {
-
         localStorage.setItem("myNotesPIN", pin);
         savedPIN = pin;
-
     } else if (pin !== savedPIN) {
-
         document.getElementById("pinMessage").innerText =
             "Wrong PIN! Try again.";
         return;
@@ -322,8 +298,57 @@ function checkPIN() {
     displayNotes();
 }
 
-function addNote() {
+function showChangePIN() {
+    document.getElementById("changePINBox").style.display = "block";
+    document.getElementById("changePINMessage").innerText = "";
+}
 
+function hideChangePIN() {
+    document.getElementById("changePINBox").style.display = "none";
+
+    document.getElementById("oldPIN").value = "";
+    document.getElementById("newPIN").value = "";
+    document.getElementById("confirmPIN").value = "";
+    document.getElementById("changePINMessage").innerText = "";
+}
+
+function saveNewPIN() {
+    let oldPIN = document.getElementById("oldPIN").value;
+    let newPIN = document.getElementById("newPIN").value;
+    let confirmPIN = document.getElementById("confirmPIN").value;
+    let message = document.getElementById("changePINMessage");
+
+    if (oldPIN !== savedPIN) {
+        message.innerText = "Old PIN is incorrect!";
+        return;
+    }
+
+    if (!/^\d{4}$/.test(newPIN)) {
+        message.innerText = "New PIN must be 4 digits!";
+        return;
+    }
+
+    if (newPIN !== confirmPIN) {
+        message.innerText = "New PINs do not match!";
+        return;
+    }
+
+    if (newPIN === oldPIN) {
+        message.innerText = "Choose a different PIN!";
+        return;
+    }
+
+    localStorage.setItem("myNotesPIN", newPIN);
+    savedPIN = newPIN;
+
+    message.innerText = "PIN changed successfully! ✅";
+
+    document.getElementById("oldPIN").value = "";
+    document.getElementById("newPIN").value = "";
+    document.getElementById("confirmPIN").value = "";
+}
+
+function addNote() {
     let title = document.getElementById("title").value;
     let note = document.getElementById("note").value;
 
@@ -347,7 +372,6 @@ function addNote() {
 }
 
 function toggleFavorites() {
-
     favOnly = !favOnly;
 
     document.getElementById("filterBtn").innerText =
@@ -357,16 +381,13 @@ function toggleFavorites() {
 }
 
 function displayNotes() {
-
     let area = document.getElementById("notes");
     let search = document.getElementById("search").value.toLowerCase();
 
     area.innerHTML = "";
-
     let found = 0;
 
     notes.forEach(function(note, index) {
-
         if (
             !note.title.toLowerCase().includes(search) &&
             !note.text.toLowerCase().includes(search)
@@ -383,8 +404,7 @@ function displayNotes() {
         let box = document.createElement("div");
 
         let heading = document.createElement("h3");
-        heading.innerText =
-            (note.favorite ? "⭐ " : "") + note.title;
+        heading.innerText = (note.favorite ? "⭐ " : "") + note.title;
 
         let content = document.createElement("p");
         content.innerText = note.text;
@@ -407,7 +427,6 @@ function displayNotes() {
         edit.innerText = "Edit";
 
         edit.onclick = function() {
-
             let newTitle = prompt("Edit title:", note.title);
             if (newTitle === null) return;
 
@@ -426,7 +445,6 @@ function displayNotes() {
         del.innerText = "Delete";
 
         del.onclick = function() {
-
             if (confirm("Delete this note?")) {
                 notes.splice(index, 1);
                 saveNotes();
@@ -453,7 +471,6 @@ function displayNotes() {
 }
 
 function toggleDarkMode() {
-
     document.body.classList.toggle("dark-mode");
 
     let dark = document.body.classList.contains("dark-mode");
@@ -465,19 +482,13 @@ function toggleDarkMode() {
 }
 
 if (localStorage.getItem("darkMode") === "on") {
-
     document.body.classList.add("dark-mode");
-
-    document.getElementById("darkBtn").innerText =
-        "☀️ Light Mode";
+    document.getElementById("darkBtn").innerText = "☀️ Light Mode";
 }
 
 if ("serviceWorker" in navigator) {
-
     window.addEventListener("load", function() {
-
         navigator.serviceWorker.register("./service-worker.js");
-
     });
 }
 
