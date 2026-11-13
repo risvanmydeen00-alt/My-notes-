@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Notes</title>
+    <title>NoteBook</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#5146a5">
     <link rel="manifest" href="manifest.json">
@@ -103,6 +103,9 @@ small { color: #888; }
     color: #25233a;
 }
 
+.backup-btn { background: #16875d; }
+.restore-btn { background: #2878bd; }
+
 .dark-mode {
     background: #171725;
     color: white;
@@ -157,13 +160,15 @@ small { color: #888; }
 }
 
 #changePINBox { display: none; }
+
+#restoreFile { display: none; }
 </style>
 </head>
 
 <body>
 
 <div id="lockScreen">
-    <h1>🔐 My Notes Locked</h1>
+    <h1>🔐 NoteBook Locked</h1>
     <p>Enter your 4-digit PIN</p>
 
     <input type="password" id="pinInput"
@@ -178,7 +183,7 @@ small { color: #888; }
 <div class="container" id="appContent" style="display:none;">
 
     <header>
-        <h1>My Notes ✨</h1>
+        <h1>NoteBook ✨</h1>
         <p>Your personal notebook</p>
     </header>
 
@@ -207,6 +212,18 @@ small { color: #888; }
         <button onclick="showChangePIN()">
             🔐 Change PIN
         </button>
+
+        <button onclick="backupNotes()" class="backup-btn">
+            📤 Backup
+        </button>
+
+        <button onclick="openRestore()" class="restore-btn">
+            📥 Restore
+        </button>
+
+        <input type="file" id="restoreFile"
+            accept=".json,application/json"
+            onchange="restoreNotes(event)">
     </div>
 
     <div id="notes"></div>
@@ -468,6 +485,122 @@ function displayNotes() {
             ? '<p class="empty">No favourite notes ⭐</p>'
             : '<p class="empty">No notes found 📝</p>';
     }
+}
+
+/* BACKUP */
+
+function backupNotes() {
+    let backup = {
+        app: "NoteBook",
+        version: 1,
+        backupDate: new Date().toISOString(),
+        notes: notes
+    };
+
+    let data = JSON.stringify(backup, null, 2);
+
+    let blob = new Blob([data], {
+        type: "application/json"
+    });
+
+    let url = URL.createObjectURL(blob);
+
+    let link = document.createElement("a");
+    link.href = url;
+    link.download = "NoteBook-Backup-" +
+        new Date().toISOString().slice(0, 10) + ".json";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(function() {
+        URL.revokeObjectURL(url);
+    }, 1000);
+
+    alert("Backup downloaded successfully! ✅");
+}
+
+/* RESTORE */
+
+function openRestore() {
+    document.getElementById("restoreFile").click();
+}
+
+function restoreNotes(event) {
+    let file = event.target.files[0];
+
+    if (!file) return;
+
+    let reader = new FileReader();
+
+    reader.onload = function() {
+        try {
+            let backup = JSON.parse(reader.result);
+
+            let importedNotes = Array.isArray(backup)
+                ? backup
+                : backup.notes;
+
+            if (!Array.isArray(importedNotes)) {
+                alert("Invalid NoteBook backup file!");
+                return;
+            }
+
+            let validNotes = importedNotes.filter(function(note) {
+                return note &&
+                    typeof note.title === "string" &&
+                    typeof note.text === "string";
+            });
+
+            if (validNotes.length !== importedNotes.length) {
+                alert("Backup contains invalid notes!");
+                return;
+            }
+
+            if (!confirm(
+                "Restore " + validNotes.length +
+                " notes? Existing notes will be kept."
+            )) {
+                return;
+            }
+
+            let added = 0;
+
+            validNotes.forEach(function(note) {
+                let exists = notes.some(function(current) {
+                    return current.title === note.title &&
+                        current.text === note.text &&
+                        current.date === note.date;
+                });
+
+                if (!exists) {
+                    notes.push({
+                        title: note.title,
+                        text: note.text,
+                        date: note.date || "",
+                        favorite: !!note.favorite
+                    });
+                    added++;
+                }
+            });
+
+            saveNotes();
+            displayNotes();
+
+            alert(
+                "Restore completed! ✅\n" +
+                added + " new notes added."
+            );
+
+        } catch (error) {
+            alert("Unable to read backup file!");
+        }
+
+        event.target.value = "";
+    };
+
+    reader.readAsText(file);
 }
 
 function toggleDarkMode() {
