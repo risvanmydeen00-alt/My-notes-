@@ -114,6 +114,16 @@ small {
     background: #7770bd;
 }
 
+.fav-btn {
+    background: #e8b323;
+    color: #25233a;
+}
+
+.filter-btn {
+    background: #e8b323;
+    color: #25233a;
+}
+
 .dark-mode {
     background: #171725;
     color: white;
@@ -171,6 +181,9 @@ placeholder="Write your note here..."></textarea>
     <button onclick="toggleDarkMode()" id="darkBtn">
         🌙 Dark Mode
     </button>
+    <button onclick="toggleFavorites()" id="filterBtn" class="filter-btn">
+        ⭐ Favorites
+    </button>
 </div>
 
 <div id="notes"></div>
@@ -179,15 +192,22 @@ placeholder="Write your note here..."></textarea>
 
 <script>
 let notes = JSON.parse(localStorage.getItem("myNotes")) || [];
+let favOnly = false;
 
 notes = notes.map(function(note) {
     if (typeof note === "string") {
         return {
             title: "Untitled",
             text: note,
-            date: ""
+            date: "",
+            favorite: false
         };
     }
+
+    if (note.favorite === undefined) {
+        note.favorite = false;
+    }
+
     return note;
 });
 
@@ -207,7 +227,8 @@ function addNote() {
     notes.push({
         title: title.trim() || "Untitled",
         text: note.trim(),
-        date: new Date().toLocaleString()
+        date: new Date().toLocaleString(),
+        favorite: false
     });
 
     saveNotes();
@@ -215,6 +236,15 @@ function addNote() {
 
     document.getElementById("title").value = "";
     document.getElementById("note").value = "";
+}
+
+function toggleFavorites() {
+    favOnly = !favOnly;
+
+    document.getElementById("filterBtn").innerText =
+        favOnly ? "📒 Show All Notes" : "⭐ Favorites";
+
+    displayNotes();
 }
 
 function displayNotes() {
@@ -226,10 +256,15 @@ function displayNotes() {
     let found = 0;
 
     notes.forEach(function(note, index) {
+
         if (
             !note.title.toLowerCase().includes(search) &&
             !note.text.toLowerCase().includes(search)
         ) {
+            return;
+        }
+
+        if (favOnly && !note.favorite) {
             return;
         }
 
@@ -238,13 +273,24 @@ function displayNotes() {
         let box = document.createElement("div");
 
         let heading = document.createElement("h3");
-        heading.innerText = note.title;
+        heading.innerText =
+            (note.favorite ? "⭐ " : "") + note.title;
 
         let content = document.createElement("p");
         content.innerText = note.text;
 
         let date = document.createElement("small");
         date.innerText = note.date || "";
+
+        let fav = document.createElement("button");
+        fav.className = "fav-btn";
+        fav.innerText = note.favorite ? "⭐ Favourite" : "☆ Favourite";
+
+        fav.onclick = function() {
+            notes[index].favorite = !notes[index].favorite;
+            saveNotes();
+            displayNotes();
+        };
 
         let edit = document.createElement("button");
         edit.className = "edit-btn";
@@ -280,6 +326,7 @@ function displayNotes() {
         box.appendChild(content);
         box.appendChild(date);
         box.appendChild(document.createElement("br"));
+        box.appendChild(fav);
         box.appendChild(edit);
         box.appendChild(del);
 
@@ -287,7 +334,9 @@ function displayNotes() {
     });
 
     if (found === 0) {
-        area.innerHTML = '<p class="empty">No notes found 📝</p>';
+        area.innerHTML = favOnly
+            ? '<p class="empty">No favourite notes ⭐</p>'
+            : '<p class="empty">No notes found 📝</p>';
     }
 }
 
