@@ -871,5 +871,14 @@ if (localStorage.getItem("darkMode") === "on") {
 /* SERVICE WORKER */
 
 if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+        navigator.serviceWorker.register("./service-worker.js")
+            .catch(function(error) {
+                console.log("Service Worker Error:", error);
+            });
+    });
+}
 
-    wind
+</script>
+</body>
+</html>
